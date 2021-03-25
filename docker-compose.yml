@@ -3,15 +3,20 @@ version: '3'
 services:
     # Frontend
     web:
+        container_name: jitsi_web
         image: jitsi/web:latest
         restart: ${RESTART_POLICY}
-        ports:
-            - '${HTTP_PORT}:80'
-            - '${HTTPS_PORT}:443'
+        # ports:
+        #     - '${HTTP_PORT}:80'
+        #     - '${HTTPS_PORT}:443'
+        expose:
+            - "80"
         volumes:
             - ${CONFIG}/web:/config:Z
             - ${CONFIG}/transcripts:/usr/share/jitsi-meet/transcripts:Z
         environment:
+            - VIRTUAL_HOST
+            - LETSENCRYPT_HOST
             - ENABLE_LETSENCRYPT
             - ENABLE_HTTP_REDIRECT
             - ENABLE_HSTS
@@ -102,9 +107,13 @@ services:
             meet.jitsi:
                 aliases:
                     - ${XMPP_DOMAIN}
+            nginx-proxy:
+                aliases:
+                    - ${VIRTUAL_HOST}
 
     # XMPP server
     prosody:
+        container_name: jitsi_prosody
         image: jitsi/prosody:latest
         restart: ${RESTART_POLICY}
         expose:
@@ -174,6 +183,7 @@ services:
 
     # Focus component
     jicofo:
+        container_name: jitsi_jicofo
         image: jitsi/jicofo:latest
         restart: ${RESTART_POLICY}
         volumes:
@@ -220,6 +230,7 @@ services:
 
     # Video bridge
     jvb:
+        container_name: jitsi_jvb
         image: jitsi/jvb:latest
         restart: ${RESTART_POLICY}
         ports:
@@ -255,3 +266,5 @@ services:
 # Custom network so all services can communicate using a FQDN
 networks:
     meet.jitsi:
+    nginx-proxy:
+        external: true
